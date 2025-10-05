@@ -1,0 +1,56 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Space Wars X Mobile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <style>
+    html, body { margin: 0; padding: 0; background: black; overflow: hidden; }
+    canvas { display: block; background: black; }
+    .controls {
+      position: absolute;
+      z-index: 10;
+      touch-action: none;
+    }
+    .btn {
+      width: 60px;
+      height: 60px;
+      background: rgba(255,255,255,0.2);
+      border: 2px solid white;
+      border-radius: 30px;
+      text-align: center;
+      line-height: 60px;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+      user-select: none;
+    }
+    #leftControls { bottom: 20px; left: 20px; }
+    #rightControls { bottom: 20px; right: 20px; }
+    #status {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-family: sans-serif;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div id="status">Connecting...</div>
+<div id="leftControls" class="controls">
+  <div class="btn" id="left">⟲</div>
+  <div class="btn" id="right">⟳</div>
+  <div class="btn" id="up">⇧</div>
+  <div class="btn" id="fire">✴</div>
+</div>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+// socket connection, game logic, and rendering will follow
+</script>
+</body>
+</html>
