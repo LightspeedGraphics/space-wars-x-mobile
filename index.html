@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Space Wars X Mobile</title>
   <style>
     html, body {
@@ -12,12 +12,10 @@
       overflow: hidden;
       background: black;
     }
-
     canvas {
       display: block;
       background: black;
     }
-
     #status {
       position: absolute;
       top: 10px;
@@ -28,7 +26,15 @@
       font-size: 18px;
       z-index: 999;
     }
-
+    .hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-family: sans-serif;
+      font-size: 16px;
+      z-index: 999;
+    }
     .mobile-controls {
       position: absolute;
       bottom: 20px;
@@ -37,7 +43,6 @@
       justify-content: space-around;
       z-index: 999;
     }
-
     .mobile-controls button {
       padding: 20px;
       background: rgba(255, 255, 255, 0.2);
@@ -47,7 +52,6 @@
       border-radius: 10px;
       font-family: sans-serif;
     }
-
     .menu {
       position: absolute;
       top: 50%;
@@ -58,7 +62,6 @@
       flex-direction: column;
       gap: 20px;
     }
-
     .menu button {
       font-size: 24px;
       padding: 15px 25px;
@@ -74,6 +77,7 @@
 <body>
   <canvas id="gameCanvas" width="800" height="600"></canvas>
   <div id="status">Choose a mode</div>
+  <div class="hud" id="hud">❤️ P1: 100 | 🔫 Score: 0</div>
   <div class="menu" id="menu">
     <button onclick="startGame('single')">Single Player</button>
     <button onclick="startGame('multi')">Multiplayer</button>
@@ -83,43 +87,91 @@
     <button onclick="player1.x += 10">➡️</button>
     <button onclick="player1.y -= 10">⬆️</button>
     <button onclick="player1.y += 10">⬇️</button>
+    <button onclick="fireBullet()">🔥</button>
   </div>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    let player1 = { x: 100, y: 100 };
-    let player2 = { x: 300, y: 300 };
     let gameStarted = false;
+    let player1 = { x: 100, y: 100, health: 100 };
+    let player2 = { x: 300, y: 300, health: 100 };
+    let bullets = [];
+    let stars = Array.from({ length: 100 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: Math.random() * 2
+    }));
+    let score = 0;
 
-    function drawShip(ship, color = "white") {
+    function drawStars() {
+      ctx.fillStyle = "white";
+      for (let star of stars) {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+        star.y += 0.3;
+        if (star.y > canvas.height) {
+          star.y = 0;
+          star.x = Math.random() * canvas.width;
+        }
+      }
+    }
+
+    function drawShip(ship, color) {
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(ship.x, ship.y, 10, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    function render() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawShip(player1, "cyan");
-      drawShip(player2, "red");
+    function drawBullets() {
+      ctx.fillStyle = "yellow";
+      bullets.forEach((b, i) => {
+        b.x += b.vx;
+        b.y += b.vy;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // check collision with player2
+        if (Math.hypot(b.x - player2.x, b.y - player2.y) < 10) {
+          player2.health -= 10;
+          score += 10;
+          bullets.splice(i, 1);
+        }
+      });
     }
 
-    function startGameLoop() {
+    function fireBullet() {
+      bullets.push({ x: player1.x, y: player1.y, vx: 0, vy: -5 });
+    }
+
+    function updateHUD() {
+      document.getElementById("hud").innerText = `❤️ P1: ${player1.health} | 🔫 Score: ${score}`;
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawStars();
+      drawShip(player1, "cyan");
+      drawShip(player2, "red");
+      drawBullets();
+      updateHUD();
+    }
+
+    function gameLoop() {
       function loop() {
-        if (gameStarted) {
-          render();
-        }
+        if (gameStarted) render();
         requestAnimationFrame(loop);
       }
       loop();
     }
 
-    window.render = render; // Allow bot to hook
-    startGameLoop(); // Start loop early
+    gameLoop();
 
-    // COUNTDOWN MODULE
+    // Countdown
     window.startCountdown = function(callback) {
       const overlay = document.createElement("div");
       overlay.style.position = "absolute";
@@ -146,48 +198,46 @@
         if (seconds <= 0) {
           clearInterval(interval);
           overlay.remove();
-          if (typeof callback === "function") callback();
+          callback();
         }
       }, 1000);
     };
 
-    // BOT MODULE
-    window.startSoloBot = function(playerShip, enemyShip, canvas) {
-      const botSpeed = 1.5;
-      function moveBotTowardPlayer() {
-        const dx = playerShip.x - enemyShip.x;
-        const dy = playerShip.y - enemyShip.y;
+    // Simple Bot
+    window.startSoloBot = function() {
+      const botSpeed = 1.2;
+      const botInterval = setInterval(() => {
+        const dx = player1.x - player2.x;
+        const dy = player1.y - player2.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist > 1) {
-          enemyShip.x += (dx / dist) * botSpeed;
-          enemyShip.y += (dy / dist) * botSpeed;
+          player2.x += (dx / dist) * botSpeed;
+          player2.y += (dy / dist) * botSpeed;
         }
-      }
-
-      const originalRender = window.render;
-      window.render = function() {
-        moveBotTowardPlayer();
-        originalRender();
-      };
-
-      console.log("Solo bot started");
+      }, 50);
     };
 
-    // START GAME
+    // Game Start
     window.startGame = function(mode) {
       document.getElementById("menu").style.display = "none";
-      document.getElementById("status").innerText = "Starting in 10 seconds...";
+      document.getElementById("status").innerText = "Waiting for opponent...";
 
-      window.startCountdown(() => {
-        if (mode === "single") {
+      if (mode === "multi") {
+        // Simulate match found
+        setTimeout(() => {
+          document.getElementById("status").innerText = "Match found!";
+          window.startCountdown(() => {
+            document.getElementById("status").innerText = "Multiplayer Game Started!";
+            gameStarted = true;
+          });
+        }, 2000);
+      } else {
+        window.startCountdown(() => {
           document.getElementById("status").innerText = "Solo Game Started!";
-          window.startSoloBot(player1, player2, canvas);
-        } else if (mode === "multi") {
-          document.getElementById("status").innerText = "Connecting to opponent...";
-          socket.connect(); // Multiplayer logic if needed
-        }
-        gameStarted = true;
-      });
+          window.startSoloBot();
+          gameStarted = true;
+        });
+      }
     };
   </script>
 </body>
