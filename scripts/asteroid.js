@@ -1,5 +1,56 @@
 // asteroid.js
 
+// asteroid.js
+
+export function createAsteroid(x, y, size) {
+  const points = Math.floor(Math.random() * 3 + 5);
+  const angleStep = (Math.PI * 2) / points;
+  const offset = [];
+
+  for (let i = 0; i < points; i++) {
+    offset.push(Math.random() * 0.4 + 0.8);
+  }
+
+  return {
+    x, y, size,
+    angle: Math.random() * Math.PI * 2,
+    speed: (Math.random() * 1 + 0.5) * (50 / size),
+    direction: Math.random() * Math.PI * 2,
+    offset
+  };
+}
+
+export function updateAsteroid(ast) {
+  ast.x += Math.cos(ast.direction) * ast.speed;
+  ast.y += Math.sin(ast.direction) * ast.speed;
+
+  // screen wrap
+  if (ast.x < 0) ast.x += 800;
+  if (ast.y < 0) ast.y += 600;
+  if (ast.x > 800) ast.x -= 800;
+  if (ast.y > 600) ast.y -= 600;
+}
+
+export function drawAsteroid(ctx, ast) {
+  ctx.beginPath();
+  const angleStep = (Math.PI * 2) / ast.offset.length;
+
+  for (let i = 0; i < ast.offset.length; i++) {
+    const angle = ast.angle + i * angleStep;
+    const radius = ast.size * ast.offset[i];
+    const x = ast.x + Math.cos(angle) * radius;
+    const y = ast.y + Math.sin(angle) * radius;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+
+  ctx.closePath();
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+
 export class Asteroid {
   constructor(x, y, radius, vx, vy) {
     this.x = x;

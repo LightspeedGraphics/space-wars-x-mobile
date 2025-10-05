@@ -1,5 +1,18 @@
 // game.js (simplified using asteroid.js)
 
+import { initStars, renderStars } from './stars.js';
+import { createAsteroid, updateAsteroid, drawAsteroid } from './asteroid.js';
+
+initStars(canvas);
+
+// Inside render loop
+renderStars(ctx, player.vx, player.vy);
+asteroids.forEach(ast => {
+  updateAsteroid(ast);
+  drawAsteroid(ctx, ast);
+});
+
+
 import { playSound, startMusic, stopMusic } from './audio.js';
 
 playSound('click');       // For menu interaction
