@@ -51,19 +51,23 @@ function initPlayer() {
   };
 }
 
-function drawPlayer() {
+function drawPlayer(ctx, player) {
   ctx.save();
   ctx.translate(player.x, player.y);
-  ctx.rotate(player.angle);
-  ctx.fillStyle = 'white';
+  ctx.rotate(player.rotation);
+
   ctx.beginPath();
-  ctx.moveTo(0, -player.radius);
-  ctx.lineTo(-player.radius * 0.6, player.radius);
-  ctx.lineTo(player.radius * 0.6, player.radius);
+  ctx.moveTo(10, 0);      // Tip of triangle
+  ctx.lineTo(-10, 7);     // Bottom left
+  ctx.lineTo(-10, -7);    // Bottom right
   ctx.closePath();
-  ctx.fill();
+
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 1;
+  ctx.stroke();
   ctx.restore();
 }
+
 
 function updatePlayer() {
   if (keys['w']) {
@@ -190,11 +194,17 @@ export function startLevel() {
   gameLoop();
 }
 
-window.addEventListener('keydown', (e) => {
-  keys[e.key] = true;
-  if (e.key === ' ') shootBullet();
-  if (e.key === 'r' && gameOver) startLevel();
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'a') {
+    player.rotation -= 0.1; // rotate left
+  } else if (e.key === 'd') {
+    player.rotation += 0.1; // rotate right
+  } else if (e.key === 'w') {
+    player.vx += Math.cos(player.rotation) * 0.2;
+    player.vy += Math.sin(player.rotation) * 0.2;
+  }
 });
+
 window.addEventListener('keyup', (e) => {
   keys[e.key] = false;
 });

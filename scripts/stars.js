@@ -16,19 +16,25 @@ export function initStars(canvas) {
 }
 
 export function renderStars(ctx, offsetX = 0, offsetY = 0) {
-  ctx.fillStyle = 'black';
+  // Explicitly paint canvas black every frame
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to avoid skew
+  ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.restore();
 
+  // Draw stars
   ctx.fillStyle = 'white';
-  stars.forEach(star => {
+  for (let i = 0; i < stars.length; i++) {
+    let star = stars[i];
     star.x -= offsetX * star.speed;
     star.y -= offsetY * star.speed;
 
-    if (star.x < 0) star.x = ctx.canvas.width;
-    if (star.x > ctx.canvas.width) star.x = 0;
-    if (star.y < 0) star.y = ctx.canvas.height;
-    if (star.y > ctx.canvas.height) star.y = 0;
+    if (star.x < 0) star.x += ctx.canvas.width;
+    if (star.x > ctx.canvas.width) star.x -= ctx.canvas.width;
+    if (star.y < 0) star.y += ctx.canvas.height;
+    if (star.y > ctx.canvas.height) star.y -= ctx.canvas.height;
 
     ctx.fillRect(star.x, star.y, star.size, star.size);
-  });
+  }
 }

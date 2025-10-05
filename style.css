@@ -16,3 +16,8 @@
   text-align: center;
   margin-top: 2rem;
 }
+
+#gameCanvas {
+  background-color: #000 !important;
+}
+
