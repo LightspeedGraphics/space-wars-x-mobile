@@ -38,6 +38,188 @@
       font-size: 20px;
     }
   </style>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+const socket = io('https://space-wars-x-server.onrender.com'); // replace with your actual Render URL
+
+let playerNumber = 0;
+let roomId = null;
+let isConnected = false;
+let opponentInput = { left: false, right: false, up: false, fire: false };
+
+socket.on('connect', () => {
+  document.getElementById('status').textContent = 'Waiting for opponent...';
+});
+
+socket.on('match_found', (data) => {
+  roomId = data.roomId;
+  playerNumber = data.player;
+  isConnected = true;
+  document.getElementById('status').textContent = 'Match Found! You are Player ' + playerNumber;
+});
+
+socket.on('opponent_input', (input) => {
+  opponentInput = input;
+});
+
+socket.on('opponent_disconnected', () => {
+  document.getElementById('status').textContent = 'Opponent left. Waiting...';
+  isConnected = false;
+});
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const star = { x: centerX, y: centerY, mass: 10000 };
+const TWO_PI = Math.PI * 2;
+
+let input = { left: false, right: false, up: false, fire: false };
+
+function bindTouch(btnId, prop) {
+  const btn = document.getElementById(btnId);
+  btn.addEventListener("touchstart", () => input[prop] = true);
+  btn.addEventListener("touchend", () => input[prop] = false);
+}
+['left', 'right', 'up', 'fire'].forEach(id => bindTouch(id, id));
+
+class Ship {
+  constructor(x, y, color) {
+    this.x = x;
+    this.y = y;
+    this.color = color;
+    this.angle = 0;
+    this.velX = 0;
+    this.velY = 0;
+    this.thrust = 0.1;
+    this.rotationSpeed = 0.05;
+    this.bullets = [];
+    this.lastShot = 0;
+    this.input = {};
+  }
+
+  update() {
+    const i = this.input;
+    if (i.left) this.angle -= this.rotationSpeed;
+    if (i.right) this.angle += this.rotationSpeed;
+    if (i.up) {
+      this.velX += Math.cos(this.angle) * this.thrust;
+      this.velY += Math.sin(this.angle) * this.thrust;
+    }
+
+    const dx = star.x - this.x;
+    const dy = star.y - this.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const force = star.mass / (dist * dist);
+    const ax = force * dx / dist;
+    const ay = force * dy / dist;
+    this.velX += ax;
+    this.velY += ay;
+
+    this.x += this.velX;
+    this.y += this.velY;
+
+    if (this.x < 0) this.x = canvas.width;
+    if (this.x > canvas.width) this.x = 0;
+    if (this.y < 0) this.y = canvas.height;
+    if (this.y > canvas.height) this.y = 0;
+
+    if (i.fire && Date.now() - this.lastShot > 500) {
+      this.shoot();
+      this.lastShot = Date.now();
+    }
+
+    this.bullets = this.bullets.filter(b => b.life > 0);
+    this.bullets.forEach(b => b.update());
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+    ctx.strokeStyle = this.color;
+    ctx.beginPath();
+    ctx.moveTo(10, 0);
+    ctx.lineTo(-10, -7);
+    ctx.lineTo(-10, 7);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+
+    this.bullets.forEach(b => b.draw());
+  }
+
+  shoot() {
+    const speed = 5;
+    this.bullets.push(new Bullet(
+      this.x + Math.cos(this.angle) * 10,
+      this.y + Math.sin(this.angle) * 10,
+      Math.cos(this.angle) * speed + this.velX,
+      Math.sin(this.angle) * speed + this.velY,
+      this.color
+    ));
+  }
+}
+
+class Bullet {
+  constructor(x, y, velX, velY, color) {
+    this.x = x;
+    this.y = y;
+    this.velX = velX;
+    this.velY = velY;
+    this.life = 60;
+    this.color = color;
+  }
+
+  update() {
+    this.x += this.velX;
+    this.y += this.velY;
+    this.life--;
+  }
+
+  draw() {
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 2, 0, TWO_PI);
+    ctx.fill();
+  }
+}
+
+const myShip = new Ship(100, 100, "cyan");
+const opponentShip = new Ship(canvas.width - 100, canvas.height - 100, "orange");
+
+function drawStar() {
+  ctx.fillStyle = "yellow";
+  ctx.beginPath();
+  ctx.arc(star.x, star.y, 20, 0, TWO_PI);
+  ctx.fill();
+}
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawStar();
+
+  if (isConnected) {
+    myShip.input = input;
+    opponentShip.input = opponentInput;
+    myShip.update();
+    opponentShip.update();
+
+    socket.emit('player_input', { roomId, input });
+  }
+
+  myShip.draw();
+  opponentShip.draw();
+
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
