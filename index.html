@@ -1,19 +1,23 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Space Wars X Mobile</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background-color: black;
+      background: black;
     }
+
     canvas {
       display: block;
+      background: black;
     }
+
     #status {
       position: absolute;
       top: 10px;
@@ -22,109 +26,169 @@
       color: white;
       font-family: sans-serif;
       font-size: 18px;
-      z-index: 1;
+      z-index: 999;
+    }
+
+    .mobile-controls {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      z-index: 999;
+    }
+
+    .mobile-controls button {
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 20px;
+      border: none;
+      border-radius: 10px;
+      font-family: sans-serif;
+    }
+
+    .menu {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .menu button {
+      font-size: 24px;
+      padding: 15px 25px;
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-family: sans-serif;
     }
   </style>
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
-  <div id="status">Connecting...</div>
-  <canvas id="gameCanvas"></canvas>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div id="status">Choose a mode</div>
+  <div class="menu" id="menu">
+    <button onclick="startGame('single')">Single Player</button>
+    <button onclick="startGame('multi')">Multiplayer</button>
+  </div>
+  <div class="mobile-controls">
+    <button onclick="player1.x -= 10">⬅️</button>
+    <button onclick="player1.x += 10">➡️</button>
+    <button onclick="player1.y -= 10">⬆️</button>
+    <button onclick="player1.y += 10">⬇️</button>
+  </div>
+
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
 
-    const socket = io("https://space-wars-x-server.onrender.com");
-    const statusDiv = document.getElementById("status");
-
-    let playerNumber = null;
+    let player1 = { x: 100, y: 100 };
+    let player2 = { x: 300, y: 300 };
     let gameStarted = false;
 
-    const ship1 = { x: 100, y: 100, color: "red" };
-    const ship2 = { x: 300, y: 100, color: "blue" };
-
-    const myShip = { x: Math.random() * canvas.width, y: Math.random() * canvas.height, color: "white" };
-
-    function drawShip(ship) {
+    function drawShip(ship, color = "white") {
+      ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(ship.x, ship.y, 20, 0, 2 * Math.PI);
-      ctx.fillStyle = ship.color;
+      ctx.arc(ship.x, ship.y, 10, 0, Math.PI * 2);
       ctx.fill();
     }
 
     function render() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawShip(ship1);
-      drawShip(ship2);
+      drawShip(player1, "cyan");
+      drawShip(player2, "red");
     }
 
-    function gameLoop() {
-      if (gameStarted) {
-        render();
+    function startGameLoop() {
+      function loop() {
+        if (gameStarted) {
+          render();
+        }
+        requestAnimationFrame(loop);
       }
-      requestAnimationFrame(gameLoop);
+      loop();
     }
 
-    gameLoop();
+    window.render = render; // Allow bot to hook
+    startGameLoop(); // Start loop early
 
-    socket.on("connect", () => {
-      statusDiv.innerText = "Waiting for opponent...";
-    });
+    // COUNTDOWN MODULE
+    window.startCountdown = function(callback) {
+      const overlay = document.createElement("div");
+      overlay.style.position = "absolute";
+      overlay.style.top = 0;
+      overlay.style.left = 0;
+      overlay.style.width = "100vw";
+      overlay.style.height = "100vh";
+      overlay.style.background = "rgba(0, 0, 0, 0.85)";
+      overlay.style.display = "flex";
+      overlay.style.alignItems = "center";
+      overlay.style.justifyContent = "center";
+      overlay.style.fontSize = "64px";
+      overlay.style.color = "white";
+      overlay.style.fontFamily = "sans-serif";
+      overlay.style.zIndex = 1000;
+      document.body.appendChild(overlay);
 
-    socket.on("matchFound", (data) => {
-      playerNumber = data.player;
-      statusDiv.innerText = "Match Found! You are Player " + playerNumber;
-      gameStarted = true;
-    });
+      let seconds = 10;
+      overlay.innerText = seconds;
 
-    socket.on("update", (data) => {
-      ship1.x = data.ship1.x;
-      ship1.y = data.ship1.y;
-      ship2.x = data.ship2.x;
-      ship2.y = data.ship2.y;
-    });
+      const interval = setInterval(() => {
+        seconds--;
+        overlay.innerText = seconds;
+        if (seconds <= 0) {
+          clearInterval(interval);
+          overlay.remove();
+          if (typeof callback === "function") callback();
+        }
+      }, 1000);
+    };
 
-    function sendMyPosition(x, y) {
-      socket.emit("move", { x, y });
-    }
+    // BOT MODULE
+    window.startSoloBot = function(playerShip, enemyShip, canvas) {
+      const botSpeed = 1.5;
+      function moveBotTowardPlayer() {
+        const dx = playerShip.x - enemyShip.x;
+        const dy = playerShip.y - enemyShip.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 1) {
+          enemyShip.x += (dx / dist) * botSpeed;
+          enemyShip.y += (dy / dist) * botSpeed;
+        }
+      }
 
-    canvas.addEventListener("touchmove", (e) => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      const rect = canvas.getBoundingClientRect();
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
-      sendMyPosition(x, y);
-    }, { passive: false });
+      const originalRender = window.render;
+      window.render = function() {
+        moveBotTowardPlayer();
+        originalRender();
+      };
+
+      console.log("Solo bot started");
+    };
+
+    // START GAME
+    window.startGame = function(mode) {
+      document.getElementById("menu").style.display = "none";
+      document.getElementById("status").innerText = "Starting in 10 seconds...";
+
+      window.startCountdown(() => {
+        if (mode === "single") {
+          document.getElementById("status").innerText = "Solo Game Started!";
+          window.startSoloBot(player1, player2, canvas);
+        } else if (mode === "multi") {
+          document.getElementById("status").innerText = "Connecting to opponent...";
+          socket.connect(); // Multiplayer logic if needed
+        }
+        gameStarted = true;
+      });
+    };
   </script>
-
-<script>
-  window.startGame = function(mode) {
-    document.getElementById("status").innerText = "Starting in 10 seconds...";
-
-    window.startCountdown(() => {
-      if (mode === "single") {
-        document.getElementById("status").innerText = "Solo Game Started!";
-        window.startSoloBot(player1, player2, canvas); // plug in your ship variables here
-      } else if (mode === "multi") {
-        document.getElementById("status").innerText = "Connecting to opponent...";
-        socket.connect(); // Multiplayer logic already built
-      }
-
-      gameStarted = true;
-    });
-  };
-</script>
-
-
-
-<script src="countdown.js"></script>
-<script src="menu.js"></script>
-<script src="bots.js"></script>
-
-
-
 </body>
 </html>
