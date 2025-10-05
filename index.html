@@ -1,97 +1,48 @@
-
-<!-- Core game layout and logic will go here -->
-<!-- Due to complexity and modular structure, full code is built as external assets, this placeholder simulates the deployment-ready build -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Space Wars X Arcade</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: black;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-    }
-    canvas {
-      display: block;
-      background: radial-gradient(circle, #000011 0%, #000000 100%);
-    }
-    #ui {
-      position: absolute;
-      top: 0;
-      left: 0;
-      color: white;
-      padding: 10px;
-      font-size: 16px;
-      z-index: 10;
-    }
-    .center-menu {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      z-index: 20;
-      color: white;
-    }
-    .btn {
-      background: rgba(255,255,255,0.1);
-      color: white;
-      border: 1px solid white;
-      padding: 12px 24px;
-      margin: 8px;
-      cursor: pointer;
-      font-size: 18px;
-      border-radius: 6px;
-    }
-    .mobile-controls {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 20px;
-      z-index: 15;
-    }
-    .mobile-btn {
-      background: rgba(255,255,255,0.2);
-      border: 2px solid white;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      color: white;
-      font-size: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>🚀 Space Wars X Mobile</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <canvas id="gameCanvas" width="800" height="600"></canvas>
-  <div id="ui">Score: <span id="score">0</span> | Health: <span id="health">100</span></div>
-
+  <!-- Game Menu -->
   <div class="center-menu" id="menu">
     <h1>🚀 Space Wars X Arcade</h1>
-    <button class="btn" onclick="startGame()">Start Game</button>
+    <button class="btn" id="startBtn">Start Game</button>
+
+    <!-- Game mode buttons (initially hidden) -->
+    <div id="modeButtons" style="display: none; margin-top: 1rem;">
+      <button class="btn" id="singlePlayerBtn">Single Player</button>
+      <button class="btn" id="multiplayerBtn">Multiplayer</button>
+    </div>
   </div>
 
-  <div class="mobile-controls">
-    <div class="mobile-btn" ontouchstart="keys.w=true" ontouchend="keys.w=false">↑</div>
-    <div class="mobile-btn" ontouchstart="keys.a=true" ontouchend="keys.a=false">←</div>
-    <div class="mobile-btn" ontouchstart="keys.d=true" ontouchend="keys.d=false">→</div>
-    <div class="mobile-btn" ontouchstart="fireBullet()" style="background:#f00;">🔥</div>
+  <!-- Countdown -->
+  <div id="countdown" class="countdown" style="display:none;"></div>
+
+  <!-- Game Canvas -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Mobile Controls -->
+  <div id="mobile-controls" class="mobile-controls">
+    <button class="control-btn" id="upBtn">⬆️</button>
+    <div class="horizontal-controls">
+      <button class="control-btn" id="leftBtn">⬅️</button>
+      <button class="control-btn" id="shootBtn">🔥</button>
+      <button class="control-btn" id="rightBtn">➡️</button>
+    </div>
+    <button class="control-btn" id="downBtn">⬇️</button>
   </div>
 
-  <audio id="bgm" src="https://cdn.pixabay.com/download/audio/2022/11/30/audio_ae400ca7fb.mp3?filename=galactic-11428.mp3" loop></audio>
-  <audio id="click" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3cdd6362c8.mp3" preload="auto"></audio>
-  <audio id="explode" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_22b72f52b2.mp3" preload="auto"></audio>
 
-  <script src="https://lightspeedgraphics.github.io/assets/spacewars/game-logic.js"></script>
+<script type="module" src="scripts/game.js"></script>
+<script type="module" src="scripts/menu.js"></script>
+<script type="module" src="scripts/asteroid.js"></script>
+<script type="module" src="scripts/bots.js"></script>
+<script type="module" src="scripts/countdown.js"></script>
+<script type="module" src="scripts/audio.js"></script>
+
 </body>
 </html>
