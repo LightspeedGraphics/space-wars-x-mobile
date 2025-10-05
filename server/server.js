@@ -1,11 +1,18 @@
-
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const cors = require('cors'); // ✅ add this
 
 const app = express();
+app.use(cors({ origin: '*' })); // ✅ allow all origins
+
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: '*', // ✅ match this too
+    methods: ['GET', 'POST']
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 
