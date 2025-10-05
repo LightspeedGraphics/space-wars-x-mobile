@@ -1,6 +1,25 @@
 // game.js (simplified using asteroid.js)
 
-import { initStars, renderStars } from './stars.js';
+window.startGame = function(mode) {
+  // mode is either 'solo' or 'multiplayer'
+  console.log('Game starting in mode:', mode);
+  // your game initialization logic here
+};
+
+
+import { initStars } from './stars.js';
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const stars = initStars(ctx, canvas.width, canvas.height);
+
+function gameLoop() {
+  stars.draw();
+  // more drawing code...
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
 import { createAsteroid, updateAsteroid, drawAsteroid } from './asteroid.js';
 
 initStars(canvas);

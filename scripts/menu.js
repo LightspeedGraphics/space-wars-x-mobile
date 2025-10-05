@@ -1,4 +1,20 @@
 // menu.js
+
+window.showModeSelect = function () {
+  document.querySelector('#modeSelect').style.display = 'block';
+};
+
+window.startSolo = function () {
+  document.querySelector('#menu').style.display = 'none';
+  window.startGame('solo');
+};
+
+window.startMultiplayer = function () {
+  document.querySelector('#menu').style.display = 'none';
+  window.startGame('multiplayer');
+};
+
+
 import { startLevel } from './game.js';
 
 const menu = document.getElementById('menu');

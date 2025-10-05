@@ -1,48 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>🚀 Space Wars X Mobile</title>
+  <meta charset="UTF-8">
+  <title>🚀 Space Wars X Arcade</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #000;
+      height: 100%;
+    }
+
+    #gameCanvas {
+      display: block;
+      background-color: #000;
+    }
+
+    .center-menu {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: white;
+      z-index: 2;
+    }
+
+    .btn {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
-  <!-- Game Menu -->
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+
   <div class="center-menu" id="menu">
     <h1>🚀 Space Wars X Arcade</h1>
-    <button class="btn" id="startBtn">Start Game</button>
-
-    <!-- Game mode buttons (initially hidden) -->
-    <div id="modeButtons" style="display: none; margin-top: 1rem;">
-      <button class="btn" id="singlePlayerBtn">Single Player</button>
-      <button class="btn" id="multiplayerBtn">Multiplayer</button>
+    <button class="btn" onclick="showModeSelect()">Start Game</button>
+    <div id="modeSelect" style="display:none;">
+      <button class="btn" onclick="startSolo()">Single Player</button>
+      <button class="btn" onclick="startMultiplayer()">Multiplayer</button>
     </div>
   </div>
 
-  <!-- Countdown -->
-  <div id="countdown" class="countdown" style="display:none;"></div>
-
-  <!-- Game Canvas -->
-  <canvas id="gameCanvas"></canvas>
-
-  <!-- Mobile Controls -->
-  <div id="mobile-controls" class="mobile-controls">
-    <button class="control-btn" id="upBtn">⬆️</button>
-    <div class="horizontal-controls">
-      <button class="control-btn" id="leftBtn">⬅️</button>
-      <button class="control-btn" id="shootBtn">🔥</button>
-      <button class="control-btn" id="rightBtn">➡️</button>
-    </div>
-    <button class="control-btn" id="downBtn">⬇️</button>
-  </div>
-
-
-<script type="module" src="scripts/game.js"></script>
-<script type="module" src="scripts/menu.js"></script>
-<script type="module" src="scripts/asteroid.js"></script>
-<script type="module" src="scripts/bots.js"></script>
-<script type="module" src="scripts/countdown.js"></script>
-<script type="module" src="scripts/audio.js"></script>
-
+  <script src="scripts/audio.js"></script>
+  <script src="scripts/stars.js"></script>
+  <script src="scripts/asteroid.js"></script>
+  <script src="scripts/menu.js"></script>
+  <script src="scripts/game.js"></script>
 </body>
 </html>

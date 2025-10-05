@@ -3,17 +3,27 @@
 const starCount = 200;
 const stars = [];
 
-export function initStars(canvas) {
-  stars.length = 0;
-  for (let i = 0; i < starCount; i++) {
-    stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      size: Math.random() * 1.5 + 0.5,
-      speed: Math.random() * 0.3 + 0.1
+export function initStars(ctx, width, height, count = 100) {
+  const stars = Array.from({ length: count }).map(() => ({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    size: Math.random() * 2,
+  }));
+
+  function draw() {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "white";
+    stars.forEach(star => {
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.size, 0, 2 * Math.PI);
+      ctx.fill();
     });
   }
+
+  return { draw };
 }
+
 
 export function renderStars(ctx, offsetX = 0, offsetY = 0) {
   // Explicitly paint canvas black every frame
